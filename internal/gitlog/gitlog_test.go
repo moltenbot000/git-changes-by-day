@@ -11,10 +11,10 @@ func TestParseLog(t *testing.T) {
 	t.Parallel()
 
 	raw := strings.Join([]string{
-		"\x1eabc123\x002026-04-01T12:00:00Z\x00feat: add cli\x00first body line\nsecond body line\x00",
+		"\x1eabc123\x002026-04-01T12:00:00Z\x00The Octocat\x00123+octocat@users.noreply.github.com\x00feat: add cli\x00first body line\nsecond body line\x00",
 		"5\t3\tmain.go",
 		"2\t1\tREADME.md",
-		"\x1edef456\x002026-04-02T08:15:00Z\x00fix: handle binary\x00\x00",
+		"\x1edef456\x002026-04-02T08:15:00Z\x00Monalisa Octocat\x00monalisa@example.com\x00fix: handle binary\x00\x00",
 		"-\t-\timage.png",
 		"3\t0\tinternal/gitlog/gitlog.go",
 	}, "\n")
@@ -40,17 +40,26 @@ func TestParseLog(t *testing.T) {
 	if got, want := first.CombinedText, "feat: add cli first body line second body line"; got != want {
 		t.Fatalf("first.CombinedText = %q, want %q", got, want)
 	}
+	if got, want := first.GitHubAuthorHandle, "octocat"; got != want {
+		t.Fatalf("first.GitHubAuthorHandle = %q, want %q", got, want)
+	}
+	if got, want := first.GitHubAuthorDisplayName, "The Octocat"; got != want {
+		t.Fatalf("first.GitHubAuthorDisplayName = %q, want %q", got, want)
+	}
 
 	second := commits[1]
 	if got, want := second.FilesChanged, 1; got != want {
 		t.Fatalf("second.FilesChanged = %d, want %d", got, want)
+	}
+	if got := second.GitHubAuthorHandle; got != "" {
+		t.Fatalf("second.GitHubAuthorHandle = %q, want empty", got)
 	}
 }
 
 func TestParseLogRejectsBadHeader(t *testing.T) {
 	t.Parallel()
 
-	_, err := ParseLog([]byte("\x1eabc123\x002026-04-01T12:00:00Z\x00missing-body"))
+	_, err := ParseLog([]byte("\x1eabc123\x002026-04-01T12:00:00Z\x00The Octocat\x00octocat@users.noreply.github.com\x00missing-body"))
 	if err == nil {
 		t.Fatal("ParseLog() error = nil, want error")
 	}
@@ -62,10 +71,10 @@ func TestCollectorCollectSortsCommits(t *testing.T) {
 	runner := &stubRunner{
 		outputs: map[string][]byte{
 			"rev-parse --is-inside-work-tree": []byte("true\n"),
-			"log --date=iso-strict --numstat --pretty=format:%x1e%H%x00%cI%x00%s%x00%b%x00": []byte(strings.Join([]string{
-				"\x1eb\x002026-04-02T12:00:00Z\x00second\x00\x00",
+			"log --date=iso-strict --numstat --pretty=format:%x1e%H%x00%cI%x00%aN%x00%aE%x00%s%x00%b%x00": []byte(strings.Join([]string{
+				"\x1eb\x002026-04-02T12:00:00Z\x00B\x00b@users.noreply.github.com\x00second\x00\x00",
 				"1\t1\tb.go",
-				"\x1ea\x002026-04-01T12:00:00Z\x00first\x00\x00",
+				"\x1ea\x002026-04-01T12:00:00Z\x00A\x00a@users.noreply.github.com\x00first\x00\x00",
 				"1\t0\ta.go",
 			}, "\n")),
 		},
@@ -114,6 +123,20 @@ func TestJoinCommitText(t *testing.T) {
 
 	if got, want := joinCommitText("feat: add parser", "with\n\nextra   spacing"), "feat: add parser with extra spacing"; got != want {
 		t.Fatalf("joinCommitText() = %q, want %q", got, want)
+	}
+}
+
+func TestGithubAuthorHandle(t *testing.T) {
+	t.Parallel()
+
+	if got, want := githubAuthorHandle("12345+octocat@users.noreply.github.com"), "octocat"; got != want {
+		t.Fatalf("githubAuthorHandle() = %q, want %q", got, want)
+	}
+	if got, want := githubAuthorHandle("octocat@users.noreply.github.com"), "octocat"; got != want {
+		t.Fatalf("githubAuthorHandle() = %q, want %q", got, want)
+	}
+	if got := githubAuthorHandle("octocat@example.com"); got != "" {
+		t.Fatalf("githubAuthorHandle() = %q, want empty", got)
 	}
 }
 
