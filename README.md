@@ -2,6 +2,18 @@
 
 `git-changes-by-day` is a Go command-line tool that reads git history from a target repository and writes a CSV file with one row per commit.
 
+## Build
+
+```bash
+go build -o ./bin/git-changes-by-day .
+```
+
+Run the compiled binary:
+
+```bash
+./bin/git-changes-by-day -repo /path/to/repo -text-out ./commit-text.csv
+```
+
 ## Usage
 
 ```bash
@@ -31,6 +43,7 @@ Flags:
 ## Development
 
 ```bash
+go build ./...
 go test ./...
 ```
 
