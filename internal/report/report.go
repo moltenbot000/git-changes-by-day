@@ -11,6 +11,8 @@ func CommitTextRecord(commit gitlog.Commit) []string {
 		commit.CommittedAt.Format("2006-01-02T15:04:05Z07:00"),
 		commit.CommittedAt.Format("2006-01-02"),
 		commit.Hash,
+		commit.GitHubAuthorHandle,
+		commit.GitHubAuthorDisplayName,
 		commit.CombinedText,
 		strconv.Itoa(commit.FilesChanged),
 		strconv.Itoa(commit.LinesAdded),

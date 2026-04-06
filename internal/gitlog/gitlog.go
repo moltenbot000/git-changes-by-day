@@ -13,17 +13,21 @@ import (
 	"time"
 )
 
-const prettyFormat = "%x1e%H%x00%cI%x00%s%x00%b%x00"
+const prettyFormat = "%x1e%H%x00%cI%x00%aN%x00%aE%x00%s%x00%b%x00"
 
 type Commit struct {
-	Hash         string
-	CommittedAt  time.Time
-	Title        string
-	Body         string
-	CombinedText string
-	FilesChanged int
-	LinesAdded   int
-	LinesDeleted int
+	Hash                    string
+	CommittedAt             time.Time
+	AuthorDisplayName       string
+	AuthorEmail             string
+	GitHubAuthorHandle      string
+	GitHubAuthorDisplayName string
+	Title                   string
+	Body                    string
+	CombinedText            string
+	FilesChanged            int
+	LinesAdded              int
+	LinesDeleted            int
 }
 
 func (c Commit) LinesChanged() int {
@@ -95,8 +99,8 @@ func ParseLog(data []byte) ([]Commit, error) {
 			return nil, fmt.Errorf("parse git log record %q: %w", string(rawRecord), errors.New("missing header terminator"))
 		}
 
-		parts := bytes.SplitN(rawRecord, []byte{0x00}, 5)
-		if len(parts) != 5 {
+		parts := bytes.SplitN(rawRecord, []byte{0x00}, 7)
+		if len(parts) != 7 {
 			return nil, fmt.Errorf("parse git log record %q: %w", string(rawRecord), errors.New("unexpected field count"))
 		}
 
@@ -106,14 +110,18 @@ func ParseLog(data []byte) ([]Commit, error) {
 		}
 
 		commit := Commit{
-			Hash:        string(parts[0]),
-			CommittedAt: committedAt,
-			Title:       strings.TrimSpace(string(parts[2])),
-			Body:        strings.TrimSpace(string(parts[3])),
+			Hash:              string(parts[0]),
+			CommittedAt:       committedAt,
+			AuthorDisplayName: strings.TrimSpace(string(parts[2])),
+			AuthorEmail:       strings.TrimSpace(string(parts[3])),
+			Title:             strings.TrimSpace(string(parts[4])),
+			Body:              strings.TrimSpace(string(parts[5])),
 		}
+		commit.GitHubAuthorHandle = githubAuthorHandle(commit.AuthorEmail)
+		commit.GitHubAuthorDisplayName = commit.AuthorDisplayName
 		commit.CombinedText = joinCommitText(commit.Title, commit.Body)
 
-		for _, line := range strings.Split(strings.TrimSpace(string(parts[4])), "\n") {
+		for _, line := range strings.Split(strings.TrimSpace(string(parts[6])), "\n") {
 			line = strings.TrimSpace(line)
 			if line == "" {
 				continue
@@ -168,4 +176,22 @@ func joinCommitText(parts ...string) string {
 	}
 
 	return strings.Join(nonEmpty, " ")
+}
+
+func githubAuthorHandle(email string) string {
+	email = strings.TrimSpace(strings.ToLower(email))
+	if !strings.HasSuffix(email, "@users.noreply.github.com") {
+		return ""
+	}
+
+	localPart := strings.TrimSuffix(email, "@users.noreply.github.com")
+	if localPart == "" {
+		return ""
+	}
+
+	if plus := strings.LastIndex(localPart, "+"); plus >= 0 {
+		localPart = localPart[plus+1:]
+	}
+
+	return strings.TrimSpace(localPart)
 }

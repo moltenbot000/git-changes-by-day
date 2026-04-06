@@ -19,14 +19,16 @@ func TestWriteCommitText(t *testing.T) {
 
 	commits := []gitlog.Commit{
 		{
-			Hash:         "abc123",
-			CommittedAt:  committedAt,
-			Title:        "feat: add reporting",
-			Body:         "body text",
-			CombinedText: "feat: add reporting body text",
-			FilesChanged: 1,
-			LinesAdded:   7,
-			LinesDeleted: 2,
+			Hash:                    "abc123",
+			CommittedAt:             committedAt,
+			GitHubAuthorHandle:      "octocat",
+			GitHubAuthorDisplayName: "The Octocat",
+			Title:                   "feat: add reporting",
+			Body:                    "body text",
+			CombinedText:            "feat: add reporting body text",
+			FilesChanged:            1,
+			LinesAdded:              7,
+			LinesDeleted:            2,
 		},
 	}
 
@@ -38,10 +40,22 @@ func TestWriteCommitText(t *testing.T) {
 	if got, want := rows[1][2], "abc123"; got != want {
 		t.Fatalf("commit_hash = %q, want %q", got, want)
 	}
-	if got, want := rows[1][3], "feat: add reporting body text"; got != want {
+	if got, want := rows[0][3], "github_author_handle"; got != want {
+		t.Fatalf("header github_author_handle = %q, want %q", got, want)
+	}
+	if got, want := rows[0][4], "github_author_display_name"; got != want {
+		t.Fatalf("header github_author_display_name = %q, want %q", got, want)
+	}
+	if got, want := rows[1][3], "octocat"; got != want {
+		t.Fatalf("github_author_handle = %q, want %q", got, want)
+	}
+	if got, want := rows[1][4], "The Octocat"; got != want {
+		t.Fatalf("github_author_display_name = %q, want %q", got, want)
+	}
+	if got, want := rows[1][5], "feat: add reporting body text"; got != want {
 		t.Fatalf("text = %q, want %q", got, want)
 	}
-	if got, want := rows[1][7], "9"; got != want {
+	if got, want := rows[1][9], "9"; got != want {
 		t.Fatalf("lines_changed = %q, want %q", got, want)
 	}
 }

@@ -20,6 +20,8 @@ Flags:
 - `datetime`
 - `date`
 - `commit_hash`
+- `github_author_handle`
+- `github_author_display_name`
 - `text`
 - `files_changed`
 - `lines_added`
