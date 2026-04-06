@@ -37,8 +37,8 @@ func TestParseLog(t *testing.T) {
 	if got, want := first.LinesDeleted, 4; got != want {
 		t.Fatalf("first.LinesDeleted = %d, want %d", got, want)
 	}
-	if got, want := first.CombinedText, "feat: add cli\nfirst body line"; !strings.HasPrefix(got, want) {
-		t.Fatalf("first.CombinedText = %q, want prefix %q", got, want)
+	if got, want := first.CombinedText, "feat: add cli first body line second body line"; got != want {
+		t.Fatalf("first.CombinedText = %q, want %q", got, want)
 	}
 
 	second := commits[1]
@@ -106,6 +106,14 @@ func TestParseNumstat(t *testing.T) {
 	}
 	if added, deleted, ok := parseNumstat("4", "2"); !ok || added != 4 || deleted != 2 {
 		t.Fatalf("parseNumstat() = (%d, %d, %t), want (4, 2, true)", added, deleted, ok)
+	}
+}
+
+func TestJoinCommitText(t *testing.T) {
+	t.Parallel()
+
+	if got, want := joinCommitText("feat: add parser", "with\n\nextra   spacing"), "feat: add parser with extra spacing"; got != want {
+		t.Fatalf("joinCommitText() = %q, want %q", got, want)
 	}
 }
 

@@ -8,31 +8,7 @@ import (
 	"time"
 
 	"github.com/moltenbot000/git-changes-by-day/internal/gitlog"
-	"github.com/moltenbot000/git-changes-by-day/internal/report"
 )
-
-func TestWriteDailySummary(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir()
-	path := filepath.Join(dir, "out", "daily-summary.csv")
-
-	summaries := []report.DailySummary{
-		{Date: "2026-04-01", CommitCount: 2, LinesAdded: 10, LinesDeleted: 4},
-	}
-
-	if err := writeDailySummary(path, summaries); err != nil {
-		t.Fatalf("writeDailySummary() error = %v", err)
-	}
-
-	rows := readCSV(t, path)
-	if got, want := rows[1][0], "2026-04-01"; got != want {
-		t.Fatalf("date = %q, want %q", got, want)
-	}
-	if got, want := rows[1][4], "14"; got != want {
-		t.Fatalf("lines_changed = %q, want %q", got, want)
-	}
-}
 
 func TestWriteCommitText(t *testing.T) {
 	t.Parallel()
@@ -47,7 +23,7 @@ func TestWriteCommitText(t *testing.T) {
 			CommittedAt:  committedAt,
 			Title:        "feat: add reporting",
 			Body:         "body text",
-			CombinedText: "feat: add reporting\nbody text",
+			CombinedText: "feat: add reporting body text",
 			FilesChanged: 1,
 			LinesAdded:   7,
 			LinesDeleted: 2,
@@ -62,7 +38,10 @@ func TestWriteCommitText(t *testing.T) {
 	if got, want := rows[1][2], "abc123"; got != want {
 		t.Fatalf("commit_hash = %q, want %q", got, want)
 	}
-	if got, want := rows[1][9], "9"; got != want {
+	if got, want := rows[1][3], "feat: add reporting body text"; got != want {
+		t.Fatalf("text = %q, want %q", got, want)
+	}
+	if got, want := rows[1][7], "9"; got != want {
 		t.Fatalf("lines_changed = %q, want %q", got, want)
 	}
 }
