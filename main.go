@@ -25,7 +25,6 @@ func run(args []string, stdout, stderr io.Writer) error {
 	fs.SetOutput(stderr)
 
 	repoPath := fs.String("repo", ".", "path to the git repository to summarize")
-	summaryOut := fs.String("summary-out", "daily-summary.csv", "path to write the daily summary CSV")
 	textOut := fs.String("text-out", "commit-text.csv", "path to write the commit text CSV")
 
 	if err := fs.Parse(args); err != nil {
@@ -38,39 +37,11 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	if err := writeDailySummary(*summaryOut, report.AggregateByDay(commits)); err != nil {
-		return err
-	}
-
 	if err := writeCommitText(*textOut, commits); err != nil {
 		return err
 	}
 
-	fmt.Fprintf(stdout, "wrote %d commits to %s and %s\n", len(commits), *summaryOut, *textOut)
-	return nil
-}
-
-func writeDailySummary(path string, summaries []report.DailySummary) error {
-	file, err := createOutputFile(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	if err := writer.Write([]string{"date", "commit_count", "lines_added", "lines_deleted", "lines_changed"}); err != nil {
-		return err
-	}
-	for _, summary := range summaries {
-		if err := writer.Write(summary.Record()); err != nil {
-			return err
-		}
-	}
-	if err := writer.Error(); err != nil {
-		return err
-	}
+	fmt.Fprintf(stdout, "wrote %d commits to %s\n", len(commits), *textOut)
 	return nil
 }
 
@@ -84,7 +55,7 @@ func writeCommitText(path string, commits []gitlog.Commit) error {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	if err := writer.Write([]string{"datetime", "date", "commit_hash", "title", "body", "text", "files_changed", "lines_added", "lines_deleted", "lines_changed"}); err != nil {
+	if err := writer.Write([]string{"datetime", "date", "commit_hash", "text", "files_changed", "lines_added", "lines_deleted", "lines_changed"}); err != nil {
 		return err
 	}
 	for _, commit := range commits {

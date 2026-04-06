@@ -16,7 +16,7 @@ jobs:
         with:
           go-version-file: go.mod
       - run: mkdir -p artifacts/${{ github.run_id }}
-      - run: go run . -repo . -summary-out artifacts/${{ github.run_id }}/daily-summary.csv -text-out artifacts/${{ github.run_id }}/commit-text.csv
+      - run: go run . -repo . -text-out artifacts/${{ github.run_id }}/commit-text.csv
       - uses: actions/upload-artifact@v4
         with:
           name: git-changes-${{ github.run_id }}

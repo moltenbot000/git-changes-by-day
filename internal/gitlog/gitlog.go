@@ -111,7 +111,7 @@ func ParseLog(data []byte) ([]Commit, error) {
 			Title:       strings.TrimSpace(string(parts[2])),
 			Body:        strings.TrimSpace(string(parts[3])),
 		}
-		commit.CombinedText = strings.TrimSpace(strings.Join([]string{commit.Title, commit.Body}, "\n"))
+		commit.CombinedText = joinCommitText(commit.Title, commit.Body)
 
 		for _, line := range strings.Split(strings.TrimSpace(string(parts[4])), "\n") {
 			line = strings.TrimSpace(line)
@@ -154,4 +154,18 @@ func parseNumstat(addedRaw, deletedRaw string) (int, int, bool) {
 		return 0, 0, false
 	}
 	return added, deleted, true
+}
+
+func joinCommitText(parts ...string) string {
+	nonEmpty := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		nonEmpty = append(nonEmpty, strings.Join(strings.Fields(part), " "))
+	}
+
+	return strings.Join(nonEmpty, " ")
 }
