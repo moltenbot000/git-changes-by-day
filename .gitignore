@@ -1,2 +1,18 @@
 *.csv
 /bin
+
+# Local credentials and private key material.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Agent prompt snapshots may include sensitive context.
+.moltenhub-agents-*.md
