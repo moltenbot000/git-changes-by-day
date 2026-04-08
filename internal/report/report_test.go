@@ -40,3 +40,22 @@ func TestCommitTextRecord(t *testing.T) {
 		t.Fatalf("record[9] = %q, want %q", got, want)
 	}
 }
+
+func TestCommitTextRecordNormalizesDateToUTC(t *testing.T) {
+	t.Parallel()
+
+	offsetMinusSeven := time.FixedZone("UTC-07", -7*60*60)
+	commit := gitlog.Commit{
+		Hash:              "utc-shift",
+		CommittedAt:       time.Date(2026, 4, 6, 19, 1, 25, 0, offsetMinusSeven),
+		GitHubAuthorHandle: "octocat",
+	}
+
+	record := CommitTextRecord(commit)
+	if got, want := record[0], "2026-04-07T02:01:25Z"; got != want {
+		t.Fatalf("record[0] = %q, want %q", got, want)
+	}
+	if got, want := record[1], "2026-04-07"; got != want {
+		t.Fatalf("record[1] = %q, want %q", got, want)
+	}
+}
