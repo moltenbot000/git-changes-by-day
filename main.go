@@ -137,7 +137,7 @@ func writeCommitText(path string, commits []gitlog.Commit) error {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	if err := writer.Write([]string{"datetime", "date", "commit_hash", "author_email", "github_author_handle", "github_author_display_name", "text", "files_changed", "lines_added", "lines_deleted", "lines_changed"}); err != nil {
+	if err := writer.Write([]string{"datetime", "date", "commit_hash", "author_email", "github_author_handle", "github_author_display_name", "text", "files_changed", "lines_added", "lines_deleted", "lines_changed", "co_author_emails", "github_co_author_handles", "github_co_author_display_names"}); err != nil {
 		return err
 	}
 	for _, commit := range commits {

@@ -22,12 +22,19 @@ type Commit struct {
 	AuthorEmail             string
 	GitHubAuthorHandle      string
 	GitHubAuthorDisplayName string
+	CoAuthors               []CoAuthor
 	Title                   string
 	Body                    string
 	CombinedText            string
 	FilesChanged            int
 	LinesAdded              int
 	LinesDeleted            int
+}
+
+type CoAuthor struct {
+	Email             string
+	GitHubHandle      string
+	GitHubDisplayName string
 }
 
 func (c Commit) LinesChanged() int {
@@ -119,6 +126,7 @@ func ParseLog(data []byte) ([]Commit, error) {
 		}
 		commit.GitHubAuthorHandle = githubAuthorHandle(commit.AuthorEmail)
 		commit.GitHubAuthorDisplayName = commit.AuthorDisplayName
+		commit.CoAuthors = parseCoAuthors(string(parts[5]))
 		commit.CombinedText = joinCommitText(commit.Title, commit.Body)
 
 		for _, line := range strings.Split(strings.TrimSpace(string(parts[6])), "\n") {
@@ -146,6 +154,63 @@ func ParseLog(data []byte) ([]Commit, error) {
 	}
 
 	return commits, nil
+}
+
+func parseCoAuthors(body string) []CoAuthor {
+	var coAuthors []CoAuthor
+	lines := strings.Split(strings.TrimRight(body, " \t\r\n"), "\n")
+	start := len(lines)
+	for start > 0 && isTrailerLine(lines[start-1]) {
+		start--
+	}
+	if start == len(lines) {
+		return nil
+	}
+	if start > 0 && strings.TrimSpace(lines[start-1]) != "" {
+		return nil
+	}
+
+	for _, line := range lines[start:] {
+		key, value, found := strings.Cut(line, ":")
+		if !found || !strings.EqualFold(strings.TrimSpace(key), "co-authored-by") {
+			continue
+		}
+
+		value = strings.TrimSpace(value)
+		open := strings.LastIndex(value, "<")
+		if open < 0 || !strings.HasSuffix(value, ">") {
+			continue
+		}
+
+		displayName := strings.TrimSpace(value[:open])
+		email := strings.TrimSpace(value[open+1 : len(value)-1])
+		if displayName == "" || email == "" {
+			continue
+		}
+
+		coAuthors = append(coAuthors, CoAuthor{
+			Email:             email,
+			GitHubHandle:      githubAuthorHandle(email),
+			GitHubDisplayName: displayName,
+		})
+	}
+	return coAuthors
+}
+
+func isTrailerLine(line string) bool {
+	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+		return false
+	}
+	key, _, found := strings.Cut(strings.TrimSpace(line), ":")
+	if !found || key == "" {
+		return false
+	}
+	for _, char := range key {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char < '0' || char > '9') && char != '-' {
+			return false
+		}
+	}
+	return true
 }
 
 func parseNumstat(addedRaw, deletedRaw string) (int, int, bool) {

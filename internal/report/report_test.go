@@ -16,12 +16,16 @@ func TestCommitTextRecord(t *testing.T) {
 		AuthorEmail:             "octocat@example.com",
 		GitHubAuthorHandle:      "octocat",
 		GitHubAuthorDisplayName: "The Octocat",
-		Title:                   "feat: add parser",
-		Body:                    "with tests",
-		CombinedText:            "feat: add parser with tests",
-		FilesChanged:            2,
-		LinesAdded:              7,
-		LinesDeleted:            3,
+		CoAuthors: []gitlog.CoAuthor{
+			{Email: "hubot@users.noreply.github.com", GitHubHandle: "hubot", GitHubDisplayName: "Hubot"},
+			{Email: "mona@example.com", GitHubDisplayName: "Mona Lisa"},
+		},
+		Title:        "feat: add parser",
+		Body:         "with tests",
+		CombinedText: "feat: add parser with tests",
+		FilesChanged: 2,
+		LinesAdded:   7,
+		LinesDeleted: 3,
 	}
 
 	record := CommitTextRecord(commit)
@@ -36,6 +40,15 @@ func TestCommitTextRecord(t *testing.T) {
 	}
 	if got, want := record[5], "The Octocat"; got != want {
 		t.Fatalf("record[5] = %q, want %q", got, want)
+	}
+	if got, want := record[11], `["hubot@users.noreply.github.com","mona@example.com"]`; got != want {
+		t.Fatalf("record[11] = %q, want %q", got, want)
+	}
+	if got, want := record[12], `["hubot",""]`; got != want {
+		t.Fatalf("record[12] = %q, want %q", got, want)
+	}
+	if got, want := record[13], `["Hubot","Mona Lisa"]`; got != want {
+		t.Fatalf("record[13] = %q, want %q", got, want)
 	}
 	if got, want := record[6], "feat: add parser with tests"; got != want {
 		t.Fatalf("record[6] = %q, want %q", got, want)

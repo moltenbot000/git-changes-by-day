@@ -52,6 +52,9 @@ replaced. Commit author email is personal data and should be handled accordingly
 - `lines_added`
 - `lines_deleted`
 - `lines_changed`
+- `co_author_emails` (JSON array, preserving trailer order)
+- `github_co_author_handles` (JSON array; empty string when email is not a GitHub noreply address)
+- `github_co_author_display_names` (JSON array)
 
 ## Development
 
