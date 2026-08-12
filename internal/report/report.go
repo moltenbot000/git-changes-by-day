@@ -7,6 +7,13 @@ import (
 	"github.com/moltenbot000/git-changes-by-day/internal/gitlog"
 )
 
+var CommitTextHeader = []string{
+	"datetime", "date", "commit_hash", "author_email", "github_author_handle",
+	"github_author_display_name", "text", "files_changed", "lines_added",
+	"lines_deleted", "lines_changed", "co_author_emails",
+	"github_co_author_handles", "github_co_author_display_names",
+}
+
 func CommitTextRecord(commit gitlog.Commit) []string {
 	committedAtUTC := commit.CommittedAt.UTC()
 	coAuthorEmails := make([]string, 0, len(commit.CoAuthors))

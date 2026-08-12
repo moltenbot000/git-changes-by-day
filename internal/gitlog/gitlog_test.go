@@ -158,39 +158,22 @@ func TestGithubAuthorHandle(t *testing.T) {
 	}
 }
 
-func TestParseCoAuthorsIgnoresMalformedTrailers(t *testing.T) {
+func TestParseCoAuthorsIgnoresInvalidTrailers(t *testing.T) {
 	t.Parallel()
 
-	body := "Co-authored-by: no email\nCo-authored-by: <only@example.com>\nSigned-off-by: Other <other@example.com>"
-	if got := parseCoAuthors(body); len(got) != 0 {
-		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+	tests := map[string]string{
+		"malformed":         "Co-authored-by: no email\nCo-authored-by: <only@example.com>\nSigned-off-by: Other <other@example.com>",
+		"non-terminal":      "Co-authored-by: Example <example@example.com>\nwas shown above as an example\n\nSigned-off-by: Other <other@example.com>",
+		"missing separator": "This change was created with\nCo-authored-by: Example <example@example.com>",
+		"indented prose":    "Description\n\n  Co-authored-by: Example <example@example.com>",
 	}
-}
-
-func TestParseCoAuthorsOnlyUsesTerminalTrailerBlock(t *testing.T) {
-	t.Parallel()
-
-	body := "Co-authored-by: Example <example@example.com>\nwas shown above as an example\n\nSigned-off-by: Other <other@example.com>"
-	if got := parseCoAuthors(body); len(got) != 0 {
-		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
-	}
-}
-
-func TestParseCoAuthorsRequiresTrailerSeparator(t *testing.T) {
-	t.Parallel()
-
-	body := "This change was created with\nCo-authored-by: Example <example@example.com>"
-	if got := parseCoAuthors(body); len(got) != 0 {
-		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
-	}
-}
-
-func TestParseCoAuthorsIgnoresIndentedProse(t *testing.T) {
-	t.Parallel()
-
-	body := "Description\n\n  Co-authored-by: Example <example@example.com>"
-	if got := parseCoAuthors(body); len(got) != 0 {
-		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+	for name, body := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if got := parseCoAuthors(body); len(got) != 0 {
+				t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+			}
+		})
 	}
 }
 

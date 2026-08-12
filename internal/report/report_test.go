@@ -29,6 +29,9 @@ func TestCommitTextRecord(t *testing.T) {
 	}
 
 	record := CommitTextRecord(commit)
+	if got, want := len(record), len(CommitTextHeader); got != want {
+		t.Fatalf("len(record) = %d, want header length %d", got, want)
+	}
 	if got, want := record[0], "2026-04-01T10:00:00Z"; got != want {
 		t.Fatalf("record[0] = %q, want %q", got, want)
 	}
