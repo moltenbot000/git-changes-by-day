@@ -166,6 +166,9 @@ func parseCoAuthors(body string) []CoAuthor {
 	if start == len(lines) {
 		return nil
 	}
+	if start > 0 && strings.TrimSpace(lines[start-1]) != "" {
+		return nil
+	}
 
 	for _, line := range lines[start:] {
 		key, value, found := strings.Cut(strings.TrimSpace(line), ":")
