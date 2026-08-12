@@ -185,6 +185,15 @@ func TestParseCoAuthorsRequiresTrailerSeparator(t *testing.T) {
 	}
 }
 
+func TestParseCoAuthorsIgnoresIndentedProse(t *testing.T) {
+	t.Parallel()
+
+	body := "Description\n\n  Co-authored-by: Example <example@example.com>"
+	if got := parseCoAuthors(body); len(got) != 0 {
+		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+	}
+}
+
 type stubRunner struct {
 	outputs map[string][]byte
 	errs    map[string]error

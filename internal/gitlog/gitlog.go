@@ -126,7 +126,7 @@ func ParseLog(data []byte) ([]Commit, error) {
 		}
 		commit.GitHubAuthorHandle = githubAuthorHandle(commit.AuthorEmail)
 		commit.GitHubAuthorDisplayName = commit.AuthorDisplayName
-		commit.CoAuthors = parseCoAuthors(commit.Body)
+		commit.CoAuthors = parseCoAuthors(string(parts[5]))
 		commit.CombinedText = joinCommitText(commit.Title, commit.Body)
 
 		for _, line := range strings.Split(strings.TrimSpace(string(parts[6])), "\n") {
@@ -158,7 +158,7 @@ func ParseLog(data []byte) ([]Commit, error) {
 
 func parseCoAuthors(body string) []CoAuthor {
 	var coAuthors []CoAuthor
-	lines := strings.Split(strings.TrimSpace(body), "\n")
+	lines := strings.Split(strings.TrimRight(body, " \t\r\n"), "\n")
 	start := len(lines)
 	for start > 0 && isTrailerLine(lines[start-1]) {
 		start--
@@ -171,7 +171,7 @@ func parseCoAuthors(body string) []CoAuthor {
 	}
 
 	for _, line := range lines[start:] {
-		key, value, found := strings.Cut(strings.TrimSpace(line), ":")
+		key, value, found := strings.Cut(line, ":")
 		if !found || !strings.EqualFold(strings.TrimSpace(key), "co-authored-by") {
 			continue
 		}
@@ -198,6 +198,9 @@ func parseCoAuthors(body string) []CoAuthor {
 }
 
 func isTrailerLine(line string) bool {
+	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+		return false
+	}
 	key, _, found := strings.Cut(strings.TrimSpace(line), ":")
 	if !found || key == "" {
 		return false
