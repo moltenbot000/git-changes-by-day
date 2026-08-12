@@ -32,6 +32,7 @@ Flags:
 - `datetime` (UTC, RFC3339)
 - `date` (UTC, YYYY-MM-DD)
 - `commit_hash`
+- `author_email`
 - `github_author_handle`
 - `github_author_display_name`
 - `text`

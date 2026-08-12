@@ -40,6 +40,9 @@ func TestParseLog(t *testing.T) {
 	if got, want := first.CombinedText, "feat: add cli first body line second body line"; got != want {
 		t.Fatalf("first.CombinedText = %q, want %q", got, want)
 	}
+	if got, want := first.AuthorEmail, "123+octocat@users.noreply.github.com"; got != want {
+		t.Fatalf("first.AuthorEmail = %q, want %q", got, want)
+	}
 	if got, want := first.GitHubAuthorHandle, "octocat"; got != want {
 		t.Fatalf("first.GitHubAuthorHandle = %q, want %q", got, want)
 	}
@@ -48,6 +51,9 @@ func TestParseLog(t *testing.T) {
 	}
 
 	second := commits[1]
+	if got, want := second.AuthorEmail, "monalisa@example.com"; got != want {
+		t.Fatalf("second.AuthorEmail = %q, want %q", got, want)
+	}
 	if got, want := second.FilesChanged, 1; got != want {
 		t.Fatalf("second.FilesChanged = %d, want %d", got, want)
 	}

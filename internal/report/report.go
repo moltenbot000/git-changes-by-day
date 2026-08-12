@@ -13,6 +13,7 @@ func CommitTextRecord(commit gitlog.Commit) []string {
 		committedAtUTC.Format("2006-01-02T15:04:05Z07:00"),
 		committedAtUTC.Format("2006-01-02"),
 		commit.Hash,
+		commit.AuthorEmail,
 		commit.GitHubAuthorHandle,
 		commit.GitHubAuthorDisplayName,
 		commit.CombinedText,

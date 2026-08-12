@@ -21,6 +21,7 @@ func TestWriteCommitText(t *testing.T) {
 		{
 			Hash:                    "abc123",
 			CommittedAt:             committedAt,
+			AuthorEmail:             "octocat@example.com",
 			GitHubAuthorHandle:      "octocat",
 			GitHubAuthorDisplayName: "The Octocat",
 			Title:                   "feat: add reporting",
@@ -40,22 +41,28 @@ func TestWriteCommitText(t *testing.T) {
 	if got, want := rows[1][2], "abc123"; got != want {
 		t.Fatalf("commit_hash = %q, want %q", got, want)
 	}
-	if got, want := rows[0][3], "github_author_handle"; got != want {
+	if got, want := rows[0][3], "author_email"; got != want {
+		t.Fatalf("header author_email = %q, want %q", got, want)
+	}
+	if got, want := rows[0][4], "github_author_handle"; got != want {
 		t.Fatalf("header github_author_handle = %q, want %q", got, want)
 	}
-	if got, want := rows[0][4], "github_author_display_name"; got != want {
+	if got, want := rows[0][5], "github_author_display_name"; got != want {
 		t.Fatalf("header github_author_display_name = %q, want %q", got, want)
 	}
-	if got, want := rows[1][3], "octocat"; got != want {
+	if got, want := rows[1][3], "octocat@example.com"; got != want {
+		t.Fatalf("author_email = %q, want %q", got, want)
+	}
+	if got, want := rows[1][4], "octocat"; got != want {
 		t.Fatalf("github_author_handle = %q, want %q", got, want)
 	}
-	if got, want := rows[1][4], "The Octocat"; got != want {
+	if got, want := rows[1][5], "The Octocat"; got != want {
 		t.Fatalf("github_author_display_name = %q, want %q", got, want)
 	}
-	if got, want := rows[1][5], "feat: add reporting body text"; got != want {
+	if got, want := rows[1][6], "feat: add reporting body text"; got != want {
 		t.Fatalf("text = %q, want %q", got, want)
 	}
-	if got, want := rows[1][9], "9"; got != want {
+	if got, want := rows[1][10], "9"; got != want {
 		t.Fatalf("lines_changed = %q, want %q", got, want)
 	}
 }
