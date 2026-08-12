@@ -201,7 +201,8 @@ func isTrailerLine(line string) bool {
 	if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
 		return false
 	}
-	key, _, found := strings.Cut(strings.TrimSpace(line), ":")
+	key, _, found := strings.Cut(line, ":")
+	key = strings.TrimSpace(key)
 	if !found || key == "" {
 		return false
 	}

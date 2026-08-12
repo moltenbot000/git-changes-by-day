@@ -188,9 +188,11 @@ func TestParseCoAuthorsRequiresTrailerSeparator(t *testing.T) {
 func TestParseCoAuthorsIgnoresIndentedProse(t *testing.T) {
 	t.Parallel()
 
-	body := "Description\n\n  Co-authored-by: Example <example@example.com>"
-	if got := parseCoAuthors(body); len(got) != 0 {
-		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+	for _, indent := range []string{"  ", "\t"} {
+		body := "Description\n\n" + indent + "Co-authored-by: Example <example@example.com>"
+		if got := parseCoAuthors(body); len(got) != 0 {
+			t.Errorf("parseCoAuthors() with indent %q = %#v, want empty", indent, got)
+		}
 	}
 }
 
