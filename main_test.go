@@ -3,7 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,6 +14,10 @@ import (
 
 	"github.com/moltenbot000/git-changes-by-day/internal/gitlog"
 )
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
 
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
@@ -43,6 +50,101 @@ func TestRunRejectsUnexpectedArguments(t *testing.T) {
 	err := run([]string{"unknown"}, &bytes.Buffer{}, &bytes.Buffer{})
 	if err == nil || !strings.Contains(err.Error(), "unexpected arguments") {
 		t.Fatalf("run() error = %v, want unexpected arguments error", err)
+	}
+}
+
+func TestRunRejectsInvalidFlag(t *testing.T) {
+	t.Parallel()
+	var stderr bytes.Buffer
+	err := run([]string{"-unknown"}, &bytes.Buffer{}, &stderr)
+	if err == nil || !strings.Contains(stderr.String(), "flag provided but not defined") {
+		t.Fatalf("run() = %v, stderr %q; want invalid flag", err, stderr.String())
+	}
+}
+
+func TestRunFlagHelpWithExtraArgument(t *testing.T) {
+	t.Parallel()
+	var stderr bytes.Buffer
+	if err := run([]string{"-h", "ignored"}, io.Discard, &stderr); err != nil {
+		t.Fatalf("run(-h) error = %v", err)
+	}
+	if !strings.Contains(stderr.String(), "QUICK START") {
+		t.Fatalf("stderr = %q, want usage", stderr.String())
+	}
+}
+
+func TestRunHelpReportsWriteFailure(t *testing.T) {
+	t.Parallel()
+	if err := run([]string{"help"}, failingWriter{}, io.Discard); err == nil || err.Error() != "write failed" {
+		t.Fatalf("run(help) error = %v, want write failed", err)
+	}
+}
+
+func TestRunExportsRepository(t *testing.T) {
+	t.Parallel()
+	dir := createGitRepository(t)
+	out := filepath.Join(t.TempDir(), "nested", "commits.csv")
+	var stdout, stderr bytes.Buffer
+	if err := run([]string{"-repo", dir, "-text-out", out}, &stdout, &stderr); err != nil {
+		t.Fatalf("run() error = %v, stderr = %q", err, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "wrote 1 commits") || len(readCSV(t, out)) != 2 {
+		t.Fatalf("stdout = %q, rows = %#v", stdout.String(), readCSV(t, out))
+	}
+}
+
+func TestRunReportsSuccessWriteFailure(t *testing.T) {
+	t.Parallel()
+	dir := createGitRepository(t)
+	if err := run([]string{"-repo", dir, "-text-out", filepath.Join(t.TempDir(), "out.csv")}, failingWriter{}, io.Discard); err == nil || err.Error() != "write failed" {
+		t.Fatalf("run() error = %v, want write failed", err)
+	}
+}
+
+func TestRunReportsRepositoryAndOutputErrors(t *testing.T) {
+	t.Parallel()
+	if err := run([]string{"-repo", t.TempDir()}, io.Discard, io.Discard); err == nil {
+		t.Fatal("run(non-repository) error = nil, want error")
+	}
+	dir := createGitRepository(t)
+	parentFile := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(parentFile, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	err := run([]string{"-repo", dir, "-text-out", filepath.Join(parentFile, "out.csv")}, io.Discard, io.Discard)
+	if err == nil || !strings.Contains(err.Error(), "create output directory") {
+		t.Fatalf("run() error = %v, want output directory error", err)
+	}
+}
+
+func TestWriteCommitTextReportsFlushFailure(t *testing.T) {
+	if _, err := os.Stat("/dev/full"); err != nil {
+		t.Skip("/dev/full unavailable")
+	}
+	if err := writeCommitText("/dev/full", []gitlog.Commit{{Hash: "abc"}}); err == nil {
+		t.Fatal("writeCommitText(/dev/full) error = nil, want flush error")
+	}
+}
+
+func TestCreateOutputFileReportsCreateFailure(t *testing.T) {
+	t.Parallel()
+	if _, err := createOutputFile(t.TempDir()); err == nil || !strings.Contains(err.Error(), "create output file") {
+		t.Fatalf("createOutputFile(directory) error = %v, want create error", err)
+	}
+}
+
+func TestMainExitBehavior(t *testing.T) {
+	if os.Getenv("TEST_MAIN_HELPER") == "1" {
+		os.Args = []string{"git-changes-by-day", "-repo", filepath.Join(t.TempDir(), "missing")}
+		main()
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestMainExitBehavior")
+	cmd.Env = append(os.Environ(), "TEST_MAIN_HELPER=1")
+	out, err := cmd.CombinedOutput()
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 || !strings.Contains(string(out), "validate git repository") {
+		t.Fatalf("main subprocess = (%q, %v), want exit 1 repository error", out, err)
 	}
 }
 
@@ -126,4 +228,23 @@ func readCSV(t *testing.T, path string) [][]string {
 		t.Fatalf("read csv: %v", err)
 	}
 	return rows
+}
+
+func createGitRepository(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	for _, args := range [][]string{{"init"}, {"config", "user.name", "Test User"}, {"config", "user.email", "test@example.com"}} {
+		if out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(dir, "file.txt"), []byte("content\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"add", "file.txt"}, {"commit", "-m", "initial"}} {
+		if out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	return dir
 }
