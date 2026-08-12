@@ -13,6 +13,7 @@ func TestCommitTextRecord(t *testing.T) {
 	commit := gitlog.Commit{
 		Hash:                    "abc123",
 		CommittedAt:             time.Date(2026, 4, 1, 10, 0, 0, 0, time.UTC),
+		AuthorEmail:             "octocat@example.com",
 		GitHubAuthorHandle:      "octocat",
 		GitHubAuthorDisplayName: "The Octocat",
 		Title:                   "feat: add parser",
@@ -27,17 +28,20 @@ func TestCommitTextRecord(t *testing.T) {
 	if got, want := record[0], "2026-04-01T10:00:00Z"; got != want {
 		t.Fatalf("record[0] = %q, want %q", got, want)
 	}
-	if got, want := record[3], "octocat"; got != want {
+	if got, want := record[3], "octocat@example.com"; got != want {
 		t.Fatalf("record[3] = %q, want %q", got, want)
 	}
-	if got, want := record[4], "The Octocat"; got != want {
+	if got, want := record[4], "octocat"; got != want {
 		t.Fatalf("record[4] = %q, want %q", got, want)
 	}
-	if got, want := record[5], "feat: add parser with tests"; got != want {
+	if got, want := record[5], "The Octocat"; got != want {
 		t.Fatalf("record[5] = %q, want %q", got, want)
 	}
-	if got, want := record[9], "10"; got != want {
-		t.Fatalf("record[9] = %q, want %q", got, want)
+	if got, want := record[6], "feat: add parser with tests"; got != want {
+		t.Fatalf("record[6] = %q, want %q", got, want)
+	}
+	if got, want := record[10], "10"; got != want {
+		t.Fatalf("record[10] = %q, want %q", got, want)
 	}
 }
 
@@ -46,8 +50,8 @@ func TestCommitTextRecordNormalizesDateToUTC(t *testing.T) {
 
 	offsetMinusSeven := time.FixedZone("UTC-07", -7*60*60)
 	commit := gitlog.Commit{
-		Hash:              "utc-shift",
-		CommittedAt:       time.Date(2026, 4, 6, 19, 1, 25, 0, offsetMinusSeven),
+		Hash:               "utc-shift",
+		CommittedAt:        time.Date(2026, 4, 6, 19, 1, 25, 0, offsetMinusSeven),
 		GitHubAuthorHandle: "octocat",
 	}
 
