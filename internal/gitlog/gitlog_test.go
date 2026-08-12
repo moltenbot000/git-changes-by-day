@@ -180,6 +180,30 @@ func TestCollectorCollectValidatesRepo(t *testing.T) {
 	}
 }
 
+func TestCollectorCollectReportsResolvePathError(t *testing.T) {
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("restore working directory: %v", err)
+		}
+	})
+	if err := os.Remove(dir); err != nil {
+		t.Skipf("cannot remove current working directory: %v", err)
+	}
+
+	_, err = NewCollector(nil).Collect(context.Background(), ".")
+	if err == nil || !strings.Contains(err.Error(), "resolve repo path") {
+		t.Fatalf("Collect() error = %v, want resolve repo path error", err)
+	}
+}
+
 func TestCollectorCollectReportsLogAndParseErrors(t *testing.T) {
 	t.Parallel()
 
