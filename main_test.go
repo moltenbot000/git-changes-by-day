@@ -1,14 +1,50 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/moltenbot000/git-changes-by-day/internal/gitlog"
 )
+
+func TestRunHelp(t *testing.T) {
+	t.Parallel()
+
+	for _, arg := range []string{"help", "/help", "-h", "-help", "--help"} {
+		arg := arg
+		t.Run(arg, func(t *testing.T) {
+			t.Parallel()
+
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			if err := run([]string{arg}, &stdout, &stderr); err != nil {
+				t.Fatalf("run(%q) error = %v", arg, err)
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("stderr = %q, want empty", stderr.String())
+			}
+			for _, want := range []string{"QUICK START", "OPTIONS", "OUTPUT", "AUTOMATION BEST PRACTICES"} {
+				if !strings.Contains(stdout.String(), want) {
+					t.Errorf("help output missing %q", want)
+				}
+			}
+		})
+	}
+}
+
+func TestRunRejectsUnexpectedArguments(t *testing.T) {
+	t.Parallel()
+
+	err := run([]string{"unknown"}, &bytes.Buffer{}, &bytes.Buffer{})
+	if err == nil || !strings.Contains(err.Error(), "unexpected arguments") {
+		t.Fatalf("run() error = %v, want unexpected arguments error", err)
+	}
+}
 
 func TestWriteCommitText(t *testing.T) {
 	t.Parallel()
