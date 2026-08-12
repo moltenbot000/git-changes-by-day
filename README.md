@@ -35,14 +35,14 @@ Flags:
 - `author_email`
 - `github_author_handle`
 - `github_author_display_name`
-- `co_author_emails` (JSON array, preserving trailer order)
-- `github_co_author_handles` (JSON array; empty string when email is not a GitHub noreply address)
-- `github_co_author_display_names` (JSON array)
 - `text`
 - `files_changed`
 - `lines_added`
 - `lines_deleted`
 - `lines_changed`
+- `co_author_emails` (JSON array, preserving trailer order)
+- `github_co_author_handles` (JSON array; empty string when email is not a GitHub noreply address)
+- `github_co_author_display_names` (JSON array)
 
 ## Development
 

@@ -41,20 +41,20 @@ func TestCommitTextRecord(t *testing.T) {
 	if got, want := record[5], "The Octocat"; got != want {
 		t.Fatalf("record[5] = %q, want %q", got, want)
 	}
-	if got, want := record[6], `["hubot@users.noreply.github.com","mona@example.com"]`; got != want {
+	if got, want := record[11], `["hubot@users.noreply.github.com","mona@example.com"]`; got != want {
+		t.Fatalf("record[11] = %q, want %q", got, want)
+	}
+	if got, want := record[12], `["hubot",""]`; got != want {
+		t.Fatalf("record[12] = %q, want %q", got, want)
+	}
+	if got, want := record[13], `["Hubot","Mona Lisa"]`; got != want {
+		t.Fatalf("record[13] = %q, want %q", got, want)
+	}
+	if got, want := record[6], "feat: add parser with tests"; got != want {
 		t.Fatalf("record[6] = %q, want %q", got, want)
 	}
-	if got, want := record[7], `["hubot",""]`; got != want {
-		t.Fatalf("record[7] = %q, want %q", got, want)
-	}
-	if got, want := record[8], `["Hubot","Mona Lisa"]`; got != want {
-		t.Fatalf("record[8] = %q, want %q", got, want)
-	}
-	if got, want := record[9], "feat: add parser with tests"; got != want {
-		t.Fatalf("record[9] = %q, want %q", got, want)
-	}
-	if got, want := record[13], "10"; got != want {
-		t.Fatalf("record[13] = %q, want %q", got, want)
+	if got, want := record[10], "10"; got != want {
+		t.Fatalf("record[10] = %q, want %q", got, want)
 	}
 }
 

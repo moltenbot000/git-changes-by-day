@@ -25,14 +25,14 @@ func CommitTextRecord(commit gitlog.Commit) []string {
 		commit.AuthorEmail,
 		commit.GitHubAuthorHandle,
 		commit.GitHubAuthorDisplayName,
-		jsonStrings(coAuthorEmails),
-		jsonStrings(coAuthorHandles),
-		jsonStrings(coAuthorDisplayNames),
 		commit.CombinedText,
 		strconv.Itoa(commit.FilesChanged),
 		strconv.Itoa(commit.LinesAdded),
 		strconv.Itoa(commit.LinesDeleted),
 		strconv.Itoa(commit.LinesChanged()),
+		jsonStrings(coAuthorEmails),
+		jsonStrings(coAuthorHandles),
+		jsonStrings(coAuthorDisplayNames),
 	}
 }
 

@@ -158,7 +158,16 @@ func ParseLog(data []byte) ([]Commit, error) {
 
 func parseCoAuthors(body string) []CoAuthor {
 	var coAuthors []CoAuthor
-	for _, line := range strings.Split(body, "\n") {
+	lines := strings.Split(strings.TrimSpace(body), "\n")
+	start := len(lines)
+	for start > 0 && isTrailerLine(lines[start-1]) {
+		start--
+	}
+	if start == len(lines) {
+		return nil
+	}
+
+	for _, line := range lines[start:] {
 		key, value, found := strings.Cut(strings.TrimSpace(line), ":")
 		if !found || !strings.EqualFold(strings.TrimSpace(key), "co-authored-by") {
 			continue
@@ -183,6 +192,19 @@ func parseCoAuthors(body string) []CoAuthor {
 		})
 	}
 	return coAuthors
+}
+
+func isTrailerLine(line string) bool {
+	key, _, found := strings.Cut(strings.TrimSpace(line), ":")
+	if !found || key == "" {
+		return false
+	}
+	for _, char := range key {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char < '0' || char > '9') && char != '-' {
+			return false
+		}
+	}
+	return true
 }
 
 func parseNumstat(addedRaw, deletedRaw string) (int, int, bool) {

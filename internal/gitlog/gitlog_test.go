@@ -167,6 +167,15 @@ func TestParseCoAuthorsIgnoresMalformedTrailers(t *testing.T) {
 	}
 }
 
+func TestParseCoAuthorsOnlyUsesTerminalTrailerBlock(t *testing.T) {
+	t.Parallel()
+
+	body := "Co-authored-by: Example <example@example.com>\nwas shown above as an example\n\nSigned-off-by: Other <other@example.com>"
+	if got := parseCoAuthors(body); len(got) != 0 {
+		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
+	}
+}
+
 type stubRunner struct {
 	outputs map[string][]byte
 	errs    map[string]error
