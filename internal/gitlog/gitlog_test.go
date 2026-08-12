@@ -11,7 +11,7 @@ func TestParseLog(t *testing.T) {
 	t.Parallel()
 
 	raw := strings.Join([]string{
-		"\x1eabc123\x002026-04-01T12:00:00Z\x00The Octocat\x00123+octocat@users.noreply.github.com\x00feat: add cli\x00first body line\nsecond body line\x00",
+		"\x1eabc123\x002026-04-01T12:00:00Z\x00The Octocat\x00123+octocat@users.noreply.github.com\x00feat: add cli\x00first body line\nsecond body line\n\nCo-authored-by: Hubot <456+hubot@users.noreply.github.com>\nCo-Authored-By: Mona Lisa <mona@example.com>\x00",
 		"5\t3\tmain.go",
 		"2\t1\tREADME.md",
 		"\x1edef456\x002026-04-02T08:15:00Z\x00Monalisa Octocat\x00monalisa@example.com\x00fix: handle binary\x00\x00",
@@ -37,7 +37,7 @@ func TestParseLog(t *testing.T) {
 	if got, want := first.LinesDeleted, 4; got != want {
 		t.Fatalf("first.LinesDeleted = %d, want %d", got, want)
 	}
-	if got, want := first.CombinedText, "feat: add cli first body line second body line"; got != want {
+	if got, want := first.CombinedText, "feat: add cli first body line second body line Co-authored-by: Hubot <456+hubot@users.noreply.github.com> Co-Authored-By: Mona Lisa <mona@example.com>"; got != want {
 		t.Fatalf("first.CombinedText = %q, want %q", got, want)
 	}
 	if got, want := first.AuthorEmail, "123+octocat@users.noreply.github.com"; got != want {
@@ -48,6 +48,18 @@ func TestParseLog(t *testing.T) {
 	}
 	if got, want := first.GitHubAuthorDisplayName, "The Octocat"; got != want {
 		t.Fatalf("first.GitHubAuthorDisplayName = %q, want %q", got, want)
+	}
+	if got, want := len(first.CoAuthors), 2; got != want {
+		t.Fatalf("len(first.CoAuthors) = %d, want %d", got, want)
+	}
+	if got, want := first.CoAuthors[0].Email, "456+hubot@users.noreply.github.com"; got != want {
+		t.Fatalf("first.CoAuthors[0].Email = %q, want %q", got, want)
+	}
+	if got, want := first.CoAuthors[0].GitHubHandle, "hubot"; got != want {
+		t.Fatalf("first.CoAuthors[0].GitHubHandle = %q, want %q", got, want)
+	}
+	if got, want := first.CoAuthors[1].GitHubDisplayName, "Mona Lisa"; got != want {
+		t.Fatalf("first.CoAuthors[1].GitHubDisplayName = %q, want %q", got, want)
 	}
 
 	second := commits[1]
@@ -143,6 +155,15 @@ func TestGithubAuthorHandle(t *testing.T) {
 	}
 	if got := githubAuthorHandle("octocat@example.com"); got != "" {
 		t.Fatalf("githubAuthorHandle() = %q, want empty", got)
+	}
+}
+
+func TestParseCoAuthorsIgnoresMalformedTrailers(t *testing.T) {
+	t.Parallel()
+
+	body := "Co-authored-by: no email\nCo-authored-by: <only@example.com>\nSigned-off-by: Other <other@example.com>"
+	if got := parseCoAuthors(body); len(got) != 0 {
+		t.Fatalf("parseCoAuthors() = %#v, want empty", got)
 	}
 }
 
