@@ -110,8 +110,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(stdout, "wrote %d commits to %s\n", len(commits), *textOut)
-	return nil
+	_, err = fmt.Fprintf(stdout, "wrote %d commits to %s\n", len(commits), *textOut)
+	return err
 }
 
 func isHelpRequest(args []string) bool {
@@ -135,7 +135,6 @@ func writeCommitText(path string, commits []gitlog.Commit) error {
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
-	defer writer.Flush()
 
 	if err := writer.Write([]string{"datetime", "date", "commit_hash", "author_email", "github_author_handle", "github_author_display_name", "text", "files_changed", "lines_added", "lines_deleted", "lines_changed", "co_author_emails", "github_co_author_handles", "github_co_author_display_names"}); err != nil {
 		return err
@@ -145,6 +144,7 @@ func writeCommitText(path string, commits []gitlog.Commit) error {
 			return err
 		}
 	}
+	writer.Flush()
 	if err := writer.Error(); err != nil {
 		return err
 	}
