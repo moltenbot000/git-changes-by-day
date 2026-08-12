@@ -20,10 +20,22 @@ Run the compiled binary:
 go run . -repo /path/to/repo -text-out ./commit-text.csv
 ```
 
+For quick-start guidance, automation best practices, exit behavior, and the
+complete CLI and CSV schema reference:
+
+```bash
+go run . help
+# These aliases provide the same reference: /help, -h, -help, --help
+```
+
 Flags:
 
 - `-repo`: repository to inspect. Defaults to the current directory.
 - `-text-out`: output path for the per-commit text CSV.
+
+Use explicit paths in automation, give concurrent runs distinct output paths,
+and check the exit status before consuming the CSV. Existing output files are
+replaced. Commit author email is personal data and should be handled accordingly.
 
 ## Output
 
