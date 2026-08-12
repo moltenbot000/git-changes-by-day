@@ -51,4 +51,4 @@ go test ./...
 GitHub Actions includes:
 
 - `ci`: runs tests on pushes and pull requests.
-- `daily-artifact`: generates the commit CSV artifact on a schedule or manual dispatch and uploads it as a workflow artifact.
+- `publish-artifact`: generates and uploads the commit CSV artifact after `ci` succeeds for an update to `main`.

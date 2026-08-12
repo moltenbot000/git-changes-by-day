@@ -1,17 +1,26 @@
-name: daily-artifact
+name: publish-artifact
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '15 6 * * *'
+  workflow_run:
+    workflows:
+      - ci
+    branches:
+      - main
+    types:
+      - completed
+
+permissions:
+  contents: read
 
 jobs:
   summarize:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
